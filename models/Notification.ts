@@ -37,5 +37,7 @@ const NotificationSchema = new mongoose.Schema({
 // Compound index to prevent duplicates
 NotificationSchema.index({ userId: 1, timeBlockId: 1 }, { unique: true });
 
-const Notification = mongoose.model("Notification", NotificationSchema);
+const Notification =
+  mongoose.models.Notification ||
+  mongoose.model("Notification", NotificationSchema);
 export default Notification;

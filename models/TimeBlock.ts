@@ -33,11 +33,11 @@ const TimeBlockSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-});
+}); 
 
 // Index for efficient querying
 TimeBlockSchema.index({ userId: 1, startTime: 1 });
 
-const TimeBlock = mongoose.model("TimeBlock", TimeBlockSchema);
+const TimeBlock = mongoose.models.TimeBlock ||  mongoose.model("TimeBlock", TimeBlockSchema);
 
 export default TimeBlock;
