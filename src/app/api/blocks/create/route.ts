@@ -66,20 +66,5 @@ export async function POST(req: NextRequest) {
     endTime: end,
   });
 
-  // Schedule email reminder (10 minutes before start)
-  const eventTime = new Date(start).getTime();
-  const triggerTime = eventTime - 10 * 60 * 1000;
-  const delay = triggerTime - Date.now();
-
-  if (delay > 0) {
-    setTimeout(() => {
-      sendEmail(
-        mongoUser.email, 
-        "Reminder: Your block is coming up!",
-        `Your block "${title}" starts at ${new Date(start).toLocaleString()}`
-      ).catch((err) => console.error("Email failed:", err));
-    }, delay);
-  }
-
   return NextResponse.json(newBlock);
 }

@@ -1,35 +1,69 @@
-import { NextRequest, NextResponse } from "next/server";
-import { sendEmail } from "@/lib/sendEmail";
 import { connectToDatabase } from "@/lib/db";
+import { sendEmail } from "@/lib/sendEmail";
+import { NextResponse } from "next/server";
 import TimeBlock from "../../../../models/TimeBlock";
+import { format } from "date-fns-tz";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   await connectToDatabase();
 
-  const now = new Date();
-  const tenMinutesLater = new Date(now.getTime() + 10 * 60 * 1000);
+  try {
+    const now = new Date();
+    const tenMinutesFromNow = new Date(now.getTime() + 10 * 60 * 1000);
 
-  const blocks = await TimeBlock.find({
-    startTime: { $gte: now, $lte: tenMinutesLater },
-    notified: false,
-  }).populate("userId");
+    // Find upcoming blocks in the next 10 minutes that haven't received a reminder
+    const blocks = await TimeBlock.find({
+      startTime: { $gte: now, $lte: tenMinutesFromNow },
+      notified: { $ne: true }, // use the renamed field
+    }).populate("userId");
 
-  for (const block of blocks) {
-    const user = block.userId as any;
-    if (!user?.email) continue;
-
-    const subject = `Your study block "${block.title}" starts in 10 minutes`;
-    const text = `Hi ${user.fullName || ""},\n\nYour study block "${block.title}" starts at ${block.startTime.toLocaleString()}.\n\nStay focused!`;
-
-    try {
-      await sendEmail(user.email, subject, text);
-      block.notified = true;
-      await block.save();
-      console.log(`Notification sent to ${user.email}`);
-    } catch (err) {
-      console.error("Failed to send email:", err);
+    if (!blocks.length) {
+      return NextResponse.json({
+        success: true,
+        sent: 0,
+        message: "No upcoming blocks",
+      });
     }
-  }
 
-  return NextResponse.json({ status: "success", sent: blocks.length });
+    // Send emails concurrently
+    const results = await Promise.all(
+      blocks.map(async (block) => {
+        const user = block.userId;
+        if (!user?.email) return null;
+
+        const formattedTime = format(
+          new Date(block.startTime),
+          "yyyy-MM-dd HH:mm:ssXXX",
+          { timeZone: "Asia/Kolkata" }
+        );
+
+        try {
+          await sendEmail(
+            user.email,
+            "Reminder: Your block is coming up!",
+            `Hi ${user.fullName || "User"},\n\nYour block "${
+              block.title
+            }" starts at ${formattedTime}.\n\nDon't miss it!`
+          );
+
+          block.notified = true; // ✅ use notified
+          await block.save();
+          return true;
+        } catch (err) {
+          console.error(`Failed to send email for block ${block._id}:`, err);
+          return false;
+        }
+      })
+    );
+
+    const sentCount = results.filter(Boolean).length;
+
+    return NextResponse.json({ success: true, sent: sentCount });
+  } catch (err) {
+    console.error("Error in sending reminders:", err);
+    return NextResponse.json(
+      { success: false, error: "Failed to send reminders" },
+      { status: 500 }
+    );
+  }
 }

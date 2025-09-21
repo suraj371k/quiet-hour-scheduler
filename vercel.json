@@ -1,6 +1,6 @@
 {
   "crons": [{
-    "path": "/api/blocks/create",
+    "path": "/api/sendNotifications",
     "schedule": "* * * * *"
   }]
 }
