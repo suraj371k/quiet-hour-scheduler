@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, EyeOff, Clock, Mail, User, Lock } from "lucide-react";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 export default function Signup() {
   const [fullName, setFullName] = useState("");
@@ -16,6 +18,7 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const router = useRouter()
   const handleSignup = async () => {
     setIsLoading(true);
     setError("");
@@ -59,7 +62,8 @@ export default function Signup() {
     }
 
     setIsLoading(false);
-    alert("Signup successful!");
+    toast.success("Signup successfully")
+    router.push('/login')
   };
 
   return (

@@ -13,6 +13,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Eye, EyeOff, Mail, Lock, Clock } from "lucide-react";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 export default function SignInForm() {
   const [email, setEmail] = useState("");
@@ -22,6 +24,7 @@ export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const router = useRouter()
   const handleSignIn = async () => {
     setIsLoading(true);
     setError("");
@@ -61,6 +64,8 @@ export default function SignInForm() {
     setUser(mongoUser);
     console.log("Logged in user:", mongoUser);
     setIsLoading(false);
+    toast.success("Login successfully")
+    router.push('/')
   };
 
   return (

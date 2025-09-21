@@ -70,44 +70,6 @@ const TimeBlocksApp = () => {
     setLoading(false);
   };
 
-  const createBlock = async () => {
-    if (!form.title || !form.startTime || !form.endTime) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const token = await getToken();
-      if (!token) throw new Error("User not authenticated");
-
-      const res = await fetch("/api/blocks/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(form),
-      });
-
-      if (!res.ok) {
-        const text = await res.text();
-        console.error("Create error:", text);
-        setLoading(false);
-        toast.error("Failed to create time block");
-        return;
-      }
-
-      setForm({ title: "", description: "", startTime: "", endTime: "" });
-      setShowForm(false);
-      fetchBlocks(filter);
-      toast.success("Time block created successfully!");
-    } catch (err) {
-      console.error("Failed to create block:", err);
-      toast.error("Failed to create time block");
-    }
-    setLoading(false);
-  };
 
   useEffect(() => {
     fetchBlocks();
@@ -183,38 +145,6 @@ const TimeBlocksApp = () => {
               <p className="text-sm text-gray-500">Manage your focused work sessions</p>
             </div>
           </div>
-          
-          <AnimatePresence mode="wait">
-            {!showForm ? (
-              <motion.div
-                key="add-button"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-              >
-                <Button onClick={() => setShowForm(true)} className="gap-2">
-                  <Plus className="w-4 h-4" />
-                  Add Block
-                </Button>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="cancel-button"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-              >
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowForm(false)}
-                  className="gap-2"
-                >
-                  <X className="w-4 h-4" />
-                  Cancel
-                </Button>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </motion.div>
 
         {/* Create Form */}
@@ -272,20 +202,7 @@ const TimeBlocksApp = () => {
                     </div>
                   </div>
                   
-                  <div className="flex gap-2 pt-2">
-                    <Button
-                      onClick={createBlock}
-                      disabled={loading}
-                      className="gap-2"
-                    >
-                      {loading ? (
-                        <Loader className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Plus className="w-4 h-4" />
-                      )}
-                      Create Block
-                    </Button>
-                  </div>
+              
                 </CardContent>
               </Card>
             </motion.div>

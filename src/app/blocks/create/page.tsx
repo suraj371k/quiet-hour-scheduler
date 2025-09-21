@@ -5,8 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarIcon, Clock, FileText, PlusCircle } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Clock, FileText, PlusCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import toast from "react-hot-toast";
@@ -35,10 +41,20 @@ export default function CreateTimeBlockForm() {
       const token = session.data.session?.access_token;
       if (!token) throw new Error("User not logged in");
 
+      // Convert local datetime-local strings to UTC ISO
+      const start = new Date(data.startTime);
+      const end = new Date(data.endTime);
+
       const res = await fetch("/api/blocks/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, token }),
+        body: JSON.stringify({
+          title: data.title,
+          description: data.description,
+          startTime: start.toISOString(), // ✅ UTC safe
+          endTime: end.toISOString(),
+          token,
+        }),
       });
 
       const result = await res.json();
@@ -46,13 +62,13 @@ export default function CreateTimeBlockForm() {
         throw new Error(result.error || "Failed to create time block");
 
       setIsSuccess(true);
-      toast.success("Block created successfully")
+      toast.success("Block created successfully");
       reset();
-      
+
       // Reset success message after 3 seconds
       setTimeout(() => setIsSuccess(false), 3000);
     } catch (err: any) {
-      alert(err.message);
+      toast.error(err.message);
     }
   };
 
@@ -92,7 +108,9 @@ export default function CreateTimeBlockForm() {
                   className={errors.title ? "border-destructive" : ""}
                 />
                 {errors.title && (
-                  <p className="text-sm text-destructive">{errors.title.message}</p>
+                  <p className="text-sm text-destructive">
+                    {errors.title.message}
+                  </p>
                 )}
               </div>
 
@@ -108,18 +126,25 @@ export default function CreateTimeBlockForm() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="startTime" className="flex items-center gap-1">
+                  <Label
+                    htmlFor="startTime"
+                    className="flex items-center gap-1"
+                  >
                     <Clock className="h-4 w-4" />
                     Start Time
                   </Label>
                   <Input
                     id="startTime"
                     type="datetime-local"
-                    {...register("startTime", { required: "Start time is required" })}
+                    {...register("startTime", {
+                      required: "Start time is required",
+                    })}
                     className={errors.startTime ? "border-destructive" : ""}
                   />
                   {errors.startTime && (
-                    <p className="text-sm text-destructive">{errors.startTime.message}</p>
+                    <p className="text-sm text-destructive">
+                      {errors.startTime.message}
+                    </p>
                   )}
                 </div>
 
@@ -131,25 +156,29 @@ export default function CreateTimeBlockForm() {
                   <Input
                     id="endTime"
                     type="datetime-local"
-                    {...register("endTime", { required: "End time is required" })}
+                    {...register("endTime", {
+                      required: "End time is required",
+                    })}
                     className={errors.endTime ? "border-destructive" : ""}
                   />
                   {errors.endTime && (
-                    <p className="text-sm text-destructive">{errors.endTime.message}</p>
+                    <p className="text-sm text-destructive">
+                      {errors.endTime.message}
+                    </p>
                   )}
                 </div>
               </div>
 
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={isSubmitting}
-              >
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
                     <motion.div
                       animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      transition={{
+                        duration: 1,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
                       className="mr-2 h-4 w-4 border-2 border-background border-t-transparent rounded-full"
                     />
                     Creating...
